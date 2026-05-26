@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper: is owner of this path
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Helper: Check for valid ID formats (alphanumeric, safe symbols, max size 128)
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Helper: validate Task shape
+    function isValidTask(task) {
+      return task.id is string && task.id.size() <= 128
+        && task.title is string && task.title.size() <= 200
+        && task.category is string && task.category.size() <= 64
+        && task.priority is string && (task.priority == 'high' || task.priority == 'medium' || task.priority == 'low')
+        && task.estimatedPomodoros is int && task.estimatedPomodoros >= 0
+        && task.completedPomodoros is int && task.completedPomodoros >= 0
+        && task.completed is bool
+        && task.createdAt is string;
+    }
+
+    // Helper: validate TimeLog shape
+    function isValidTimeLog(log) {
+      return log.id is string && log.id.size() <= 128
+        && log.category is string && log.category.size() <= 64
+        && log.durationMinutes is int && log.durationMinutes >= 0 && log.durationMinutes <= 1440
+        && log.timestamp is string;
+    }
+
+    // Helper: validate CustomCategory shape
+    function isValidCustomCategory(cat) {
+      return cat.id is string && cat.id.size() <= 128
+        && cat.name is string && cat.name.size() <= 64
+        && cat.color is string && cat.color.size() <= 32;
+    }
+
+    // Helper: validate AIPlan shape
+    function isValidAIPlan(plan) {
+      return plan.summary is string && plan.summary.size() <= 50000
+        && plan.schedule is list
+        && plan.tips is list;
+    }
+
+    // Match rules for nested user resources
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /tasks/{taskId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(taskId) && isValidTask(request.resource.data);
+        allow update: if isOwner(userId) && isValidTask(request.resource.data) 
+                      && (request.resource.data.createdAt == resource.data.createdAt) // immutable createdAt
+                      && (request.resource.data.id == resource.data.id); // immutable id
+        allow delete: if isOwner(userId);
+      }
+
+      match /logs/{logId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(logId) && isValidTimeLog(request.resource.data);
+        allow update: if isOwner(userId) && isValidTimeLog(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /custom_categories/{categoryId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(categoryId) && isValidCustomCategory(request.resource.data);
+        allow update: if isOwner(userId) && isValidCustomCategory(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /ai_plan/{docId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(docId) && isValidAIPlan(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

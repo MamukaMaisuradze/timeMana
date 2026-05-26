@@ -1,0 +1,8 @@
+{
+  "name": "დროის მართვა",
+  "description": "დროის ეფექტური მართვის მობილური აპლიკაცია პომოდოროს ტაიმერით, გეგმით, ენერგიის ციკლის ანალიზითა და Gemini AI კონსულტანტით.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

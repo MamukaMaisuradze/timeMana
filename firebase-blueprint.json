@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "A focus task created by the user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "priority": { "type": "string", "enum": ["high", "medium", "low"] },
+        "estimatedPomodoros": { "type": "integer" },
+        "completedPomodoros": { "type": "integer" },
+        "completed": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "notes": { "type": "string" },
+        "completedAt": { "type": "string" },
+        "archived": { "type": "boolean" }
+      },
+      "required": ["id", "title", "category", "priority", "estimatedPomodoros", "completedPomodoros", "completed", "createdAt"]
+    },
+    "TimeLog": {
+      "title": "TimeLog",
+      "description": "A time tracking log for a completed focus session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "taskId": { "type": "string" },
+        "taskTitle": { "type": "string" },
+        "category": { "type": "string" },
+        "durationMinutes": { "type": "integer" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "category", "durationMinutes", "timestamp"]
+    },
+    "CustomCategory": {
+      "title": "CustomCategory",
+      "description": "A user-defined custom task category and color code",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "color": { "type": "string" }
+      },
+      "required": ["id", "name", "color"]
+    },
+    "AIPlan": {
+      "title": "AIPlan",
+      "description": "An AI-optimized daily schedule and focus plan",
+      "type": "object",
+      "properties": {
+        "summary": { "type": "string" },
+        "schedule": {
+          "type": "array"
+        },
+        "tips": {
+          "type": "array"
+        }
+      },
+      "required": ["summary", "schedule", "tips"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "User focus tasks"
+    },
+    "/users/{userId}/logs/{logId}": {
+      "schema": "TimeLog",
+      "description": "User completed pomodoro session logs"
+    },
+    "/users/{userId}/custom_categories/{categoryId}": {
+      "schema": "CustomCategory",
+      "description": "User custom task categories"
+    },
+    "/users/{userId}/ai_plan/plan": {
+      "schema": "AIPlan",
+      "description": "AI-optimized focus plan generated for the user"
+    }
+  }
+}
